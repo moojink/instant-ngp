@@ -179,6 +179,8 @@ if __name__ == "__main__":
 		n_steps = 35000
 
 	tqdm_last_update = 0
+	steps = []
+	losses = []
 	if n_steps > 0:
 		with tqdm(desc="Training", total=n_steps, unit="steps") as t:
 			while testbed.frame():
@@ -202,6 +204,22 @@ if __name__ == "__main__":
 					t.set_postfix(loss=testbed.loss)
 					old_training_step = testbed.training_step
 					tqdm_last_update = now
+				if testbed.training_step % (n_steps / 50) == 0 and 500 < testbed.training_step < n_steps-1:
+					steps.append(testbed.training_step)
+					losses.append(testbed.loss)
+		# Save NeRF loss curve.
+		import matplotlib.pyplot as plt
+		fig = plt.figure(figsize=(16, 8))
+		plt.xlabel("Step")
+		plt.ylabel("Loss")
+		# plt.scatter(steps, losses, alpha=0.2)
+		plt.xlim([min(steps), max(steps)])
+		plt.ylim([min(losses), max(losses)])
+		plt.plot(steps, losses, linewidth=3)
+		plot_path = 'nerf_loss_curve.png'
+		plt.savefig(plot_path)
+		plt.close(fig)
+		print(f'NeRF loss plot saved at path {plot_path}')
 
 	if args.save_snapshot:
 		testbed.save_snapshot(args.save_snapshot, False)
